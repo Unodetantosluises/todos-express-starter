@@ -2,11 +2,18 @@ require('dotenv').config();
 
 var createError = require('http-errors');
 var express = require('express');
+//Variable agregada de una respuesta de Stackoverflow
+var passport = require('passport');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var session = require('express-session');
+
+var SQLiteStore = require('connect-sqlite3')(session);
 
 var indexRouter = require('./routes/index');
+
+var authRouter = require('./routes/auth');
 
 var app = express();
 
@@ -21,14 +28,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+  store: new SQLiteStore({ db: 'sessions.db', dir: './var/db' })
+}));
 app.use('/', indexRouter);
+app.use('/', authRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
 });
 
+//Serial y DeserialUser fueron agregados en base la respuesta de stackoverflow
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
